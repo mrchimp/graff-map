@@ -1,0 +1,28 @@
+@import "minireset.css/minireset.sass";
+@import "leaflet/dist/leaflet";
+@import "~cropperjs/src/css/cropper";
+@import "variables";
+@import "bulma";
+
+.graff-map {
+  width: 100vw;
+  height: 100vh;
+
+  .leaflet-container {
+    z-index: 1;
+  }
+}
+
+.image-container {
+  display: inline-block;
+}
+
+.image-preview {
+  display: block;
+  max-width: 100%;
+}
+
+.image-preview-wrapper {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
