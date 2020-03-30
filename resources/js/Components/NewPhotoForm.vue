@@ -1,53 +1,51 @@
 <template>
   <div class="modal-card">
-    <header class="modal-card-head">
-      <p class="modal-card-title">Add a Piece</p>
-      <button class="delete" aria-label="close" @click.prevent="close"></button>
-    </header>
-    <section class="modal-card-body">
-      <form @submit.prevent="onSubmit">
-        <div class="file">
-          <label class="file-label">
-            <input
-              class="file-input"
-              type="file"
-              name="resume"
-              accept="image/png, image/jpeg"
-              placeholder="Select an image"
-              @input="setupCropper"
-            />
-
-            <span class="file-cta">
-              <span class="file-icon">
-                <i class="fas fa-upload"></i>
-              </span>
-              <span class="file-label">Choose a file…</span>
-            </span>
-          </label>
-        </div>
-
-        <div>
-          <div>
-            <div class="image-preview-wrapper">
-              <img
-                class="image-preview"
-                ref="source"
-                :src="objectUrl"
-                alt="Image preview"
-                v-if="objectUrl"
+    <form @submit.prevent="onSubmit">
+      <header class="modal-card-head">
+        <p class="modal-card-title">{{ pageTitle }} ({{ page }} / 4)</p>
+        <button class="delete" aria-label="close" @click.prevent="close"></button>
+      </header>
+      <section class="modal-card-body">
+        <div v-show="page === 1">
+          <div class="file">
+            <label class="file-label">
+              <input
+                class="file-input"
+                type="file"
+                name="resume"
+                accept="image/png, image/jpeg"
+                placeholder="Select an image"
+                @input="pickFile"
               />
-            </div>
-            <div class="image-preview-wrapper" v-if="objectUrl && debug">
-              <img class="image-preview" :src="previewCropped" alt="Cropped image preview" />
-            </div>
+
+              <span class="file-cta">
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">Choose a file…</span>
+              </span>
+            </label>
           </div>
         </div>
-
-        <div v-if="objectUrl">
+        <div v-show="page === 2">
+          <div class="image-preview-wrapper">
+            <img
+              class="image-preview"
+              ref="source"
+              :src="objectUrl"
+              alt="Image preview"
+              v-if="objectUrl"
+            />
+          </div>
+          <div class="image-preview-wrapper" v-if="objectUrl && debug">
+            <img class="image-preview" :src="previewCropped" alt="Cropped image preview" />
+          </div>
+        </div>
+        <div v-show="page === 3">
           <div class="field" v-if="debug">
             <label class="label">Coordinates</label>
             <div class="control">
-              <input class="input" type="text" disabled v-model="latLng" />
+              <input class="input" type="text" disabled v-model="photoLatLng" />
             </div>
           </div>
 
@@ -58,30 +56,64 @@
               @input="updateLatLng"
             />
           </div>
+        </div>
 
+        <div v-show="page === 4">
           <div class="field">
             <label for="photoTitle" class="label">Title</label>
             <div class="control">
-              <input type="text" class="input" id="photoTitle" v-model="title" />
+              <input
+                type="text"
+                class="input"
+                id="photoTitle"
+                v-model="title"
+                placeholder="What's this piece called?"
+              />
             </div>
           </div>
 
           <div class="field">
             <label for="photoArtist" class="label">Artist</label>
             <div class="control">
-              <input type="text" class="input" id="photoArtist" v-model="artist" />
-            </div>
-          </div>
-
-          <div class="field">
-            <div class="control">
-              <button type="submit" class="button is-success" :disabled="!submittable">Save changes</button>
-              <button class="button" @click.prevent="close">Cancel</button>
+              <input
+                type="text"
+                class="input"
+                id="photoArtist"
+                v-model="artist"
+                placeholder="Who made this piece?"
+              />
             </div>
           </div>
         </div>
-      </form>
-    </section>
+      </section>
+      <footer class="modal-card-foot">
+        <div class="field">
+          <div class="control">
+            <div class="buttons">
+              <button
+                v-if="page !== 1"
+                type="button"
+                class="button is-default"
+                @click.prevent="page--"
+              >Back</button>
+              <button
+                v-if="page === 4"
+                type="submit"
+                class="button is-success"
+                :disabled="!nextable"
+              >{{ nextable ? 'All done!' : 'Fill in details...' }}</button>
+              <button
+                v-else-if="page !== 1 || this.nextable"
+                type="button"
+                class="button is-success"
+                @click.prevent="page++"
+                :disabled="!nextable"
+              >Next</button>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </form>
   </div>
 </template>
 
@@ -99,6 +131,7 @@ export default {
   },
   data() {
     return {
+      page: 1,
       objectUrl: null,
       previewCropped: null,
       title: "",
@@ -119,22 +152,38 @@ export default {
       // Default to Null Island
       return latLng(0, 0);
     },
-    submittable() {
-      return (
-        !!this.objectUrl &&
-        !!this.photoLatLng &&
-        !(this.photoLatLng.lat === 0 && this.photoLatLng.lng === 0)
-      );
+    pageTitle() {
+      return [
+        "Choose an image",
+        "Crop your image",
+        "Set photo coordinates",
+        "Add extra details"
+      ][this.page - 1];
+    },
+    nextable() {
+      switch (this.page) {
+        case 1:
+          return !!this.objectUrl;
+        case 2:
+          return true;
+        case 3:
+          return (
+            this.photoLatLng !== null &&
+            !(this.photoLatLng.lat === 0 && this.photoLatLng.lng === 0)
+          );
+        case 4:
+          return this.title && this.artist;
+        default:
+          console.error("Invalid page.");
+          return false;
+      }
     }
   },
   methods: {
     close() {
       this.$emit("close");
     },
-    onSubmit() {
-      console.log("save");
-    },
-    setupCropper(e) {
+    pickFile(e) {
       if (e.target.files.length === 0) {
         console.error("No file!");
         return;
@@ -161,6 +210,8 @@ export default {
 
       this.objectUrl = window.URL.createObjectURL(selectedFile);
       this.$nextTick(this.setupCropperInstance);
+
+      this.page = 2;
     },
     setupCropperInstance() {
       this.cropper = new Cropper(this.$refs.source, {
@@ -176,6 +227,8 @@ export default {
       this.previewCropped = canvas.toDataURL("image/jpeg");
     },
     onSubmit() {
+      console.log("save");
+
       const canvas = this.cropper.getCroppedCanvas();
 
       canvas.toBlob(blob => {
@@ -183,7 +236,7 @@ export default {
 
         formData.append("my-avatar-file", blob, "avatar.png");
 
-        this.$axios.post("/api/files", formData, {
+        axios.post("/api/files", formData, {
           headers: {
             "Content-Type": "multipart/form-data"
           }
