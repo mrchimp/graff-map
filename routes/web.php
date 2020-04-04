@@ -17,4 +17,6 @@ Route::get('/', function () {
     return view('home');
 });
 
+Route::get('photos', 'PhotoController@index')->name('photos.index');
 Route::post('photos', 'PhotoController@store')->name('photos.store');
+Route::get('points', 'PointController@index')->name('points.index');

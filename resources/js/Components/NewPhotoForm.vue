@@ -102,27 +102,35 @@
                 type="button"
                 class="button is-default"
                 @click.prevent="page--"
-              >Back</button>
+              >
+                Back
+              </button>
               <button
                 v-if="page === this.submitPage"
                 type="submit"
                 class="button is-success"
-                :class="{'is-loading': saving}"
-                :disabled="!nextable||saving"
-              >{{ nextable ? 'All done!' : 'Fill in details...' }}</button>
+                :class="{ 'is-loading': saving }"
+                :disabled="!nextable || saving"
+              >
+                {{ nextable ? 'All done!' : 'Fill in details...' }}
+              </button>
               <button
                 v-else-if="page === this.lastPage"
                 type="button"
                 class="button is-success"
                 @click.prevent="finish"
-              >Done</button>
+              >
+                Done
+              </button>
               <button
                 v-else-if="page !== 1 || this.nextable"
                 type="button"
                 class="button is-success"
                 @click.prevent="page++"
                 :disabled="!nextable"
-              >Next</button>
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
@@ -132,16 +140,16 @@
 </template>
 
 <script>
-import Cropper from "cropperjs";
-import debounce from "lodash/debounce";
-import get from "lodash/get";
-import ExifReader from "exifreader";
-import { latLng } from "leaflet";
-import CoordSelector from "./CoordSelector.vue";
+import Cropper from 'cropperjs';
+import debounce from 'lodash/debounce';
+import get from 'lodash/get';
+import ExifReader from 'exifreader';
+import { latLng } from 'leaflet';
+import CoordSelector from './CoordSelector.vue';
 
 export default {
   components: {
-    CoordSelector
+    CoordSelector,
   },
   data() {
     return {
@@ -149,8 +157,8 @@ export default {
       pageCount: 5,
       objectUrl: null,
       previewCropped: null,
-      title: "",
-      artist: "",
+      title: '',
+      artist: '',
       selectedFile: null,
       debouncedUpdatePreview: debounce(this.updatePreview, 257),
       debug: window.debug,
@@ -172,10 +180,10 @@ export default {
     },
     pageTitle() {
       return [
-        "Choose an image",
-        "Crop your image",
-        "Set photo coordinates",
-        "Add extra details",
+        'Choose an image',
+        'Crop your image',
+        'Set photo coordinates',
+        'Add extra details',
         'All done',
       ][this.page - 1];
     },
@@ -187,26 +195,25 @@ export default {
           return true;
         case 3:
           return (
-            this.photoLatLng !== null &&
-            !(this.photoLatLng.lat === 0 && this.photoLatLng.lng === 0)
+            this.photoLatLng !== null && !(this.photoLatLng.lat === 0 && this.photoLatLng.lng === 0)
           );
         case 4:
           return this.title && this.artist;
         case 5:
           return true;
         default:
-          console.error("Invalid page.");
+          console.error('Invalid page.');
           return false;
       }
-    }
+    },
   },
   methods: {
     close() {
-      this.$emit("close");
+      this.$emit('close');
     },
     pickFile(e) {
       if (e.target.files.length === 0) {
-        console.error("No file!");
+        console.error('No file!');
         return;
       }
 
@@ -240,58 +247,58 @@ export default {
         crop: this.debouncedUpdatePreview,
         viewMode: 1,
         background: false,
-        zoomable: false
+        zoomable: false,
       });
     },
     updatePreview(e) {
       const canvas = this.cropper.getCroppedCanvas();
-      this.previewCropped = canvas.toDataURL("image/jpeg");
+      this.previewCropped = canvas.toDataURL('image/jpeg');
     },
     onSubmit() {
       this.saving = true;
 
       const canvas = this.cropper.getCroppedCanvas();
 
-      canvas.toBlob(blob => {
+      canvas.toBlob((blob) => {
         const formData = new FormData();
 
-        formData.append("photo", blob, "photo.jpg");
+        formData.append('photo', blob, 'photo.jpg');
         formData.append('title', this.title);
         formData.append('artist', this.artist);
         formData.append('lat', this.photoLatLng.lat);
         formData.append('lng', this.photoLatLng.lng);
 
-        fetch("/photos", {
+        fetch('/photos', {
           body: formData,
           credentials: 'same-origin',
           method: 'post',
           headers: {
-            "X-CSRF-Token": document.head.querySelector("[name~=csrf-token][content]").content
-          }
+            'X-CSRF-Token': document.head.querySelector('[name~=csrf-token][content]').content,
+          },
         })
-        .then(response=> {
-          if (response.status !== 201) {
-            throw 'Bad response status.';
-          }
+          .then((response) => {
+            if (response.status !== 201) {
+              throw 'Bad response status.';
+            }
 
-          this.page++;
-        })
-        .catch(error => {
-          console.error(error);
-          alert('There was a problem');
-        })
-        .then(() => {
-          this.saving = false;
-        });
+            this.page++;
+          })
+          .catch((error) => {
+            console.error(error);
+            alert('There was a problem');
+          })
+          .then(() => {
+            this.saving = false;
+          });
       });
     },
     getExif(file) {
       this.updateLatLng(null);
 
-      file.arrayBuffer().then(fileArrayBuffer => {
+      file.arrayBuffer().then((fileArrayBuffer) => {
         const tags = ExifReader.load(fileArrayBuffer);
-        let lat = get(tags, "GPSLatitude.description");
-        let lng = get(tags, "GPSLongitude.description");
+        let lat = get(tags, 'GPSLatitude.description');
+        let lng = get(tags, 'GPSLongitude.description');
 
         if (get(tags, 'GPSLatitudeRef.descripiton') === 'South latitude') {
           lat = -lat;
@@ -307,7 +314,7 @@ export default {
           this.updateLatLng(latLng(0, 0));
         }
 
-        this.exifDate = get(tags, "DateTimeOriginal.value.0", null);
+        this.exifDate = get(tags, 'DateTimeOriginal.value.0', null);
       });
     },
     updateLatLng(latLng) {
@@ -324,6 +331,6 @@ export default {
       this.photoLatLng = null;
       this.$emit('close');
     },
-  }
+  },
 };
 </script>
