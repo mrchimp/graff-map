@@ -2,7 +2,7 @@
   <div class="modal-card">
     <form @submit.prevent="onSubmit">
       <header class="modal-card-head">
-        <p class="modal-card-title">{{ pageTitle }} ({{ page }} / 4)</p>
+        <p class="modal-card-title">{{ pageTitle }} ({{ page }} / {{ pageCount }})</p>
         <button class="delete" aria-label="close" @click.prevent="close"></button>
       </header>
       <section class="modal-card-body">
@@ -41,7 +41,7 @@
             <img class="image-preview" :src="previewCropped" alt="Cropped image preview" />
           </div>
         </div>
-        <div v-show="page === 3">
+        <div v-if="page === 3">
           <div class="field" v-if="debug">
             <label class="label">Coordinates</label>
             <div class="control">
@@ -132,6 +132,7 @@ export default {
   data() {
     return {
       page: 1,
+      pageCount: 4,
       objectUrl: null,
       previewCropped: null,
       title: "",
@@ -248,8 +249,16 @@ export default {
 
       file.arrayBuffer().then(fileArrayBuffer => {
         const tags = ExifReader.load(fileArrayBuffer);
-        const lat = get(tags, "GPSLatitude.description");
-        const lng = get(tags, "GPSLongitude.description");
+        let lat = get(tags, "GPSLatitude.description");
+        let lng = get(tags, "GPSLongitude.description");
+
+        if (get(tags, 'GPSLatitudeRef.descripiton') === 'South latitude') {
+          lat = -lat;
+        }
+
+        if (get(tags, 'GPSLongitudeRef.description') === 'West longitude') {
+          lng = -lng;
+        }
 
         if (lat && lng) {
           this.updateLatLng(latLng(lat, lng));
