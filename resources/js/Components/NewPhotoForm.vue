@@ -68,6 +68,7 @@
                 id="photoTitle"
                 v-model="title"
                 placeholder="What's this piece called?"
+                ref="title"
               />
             </div>
           </div>
@@ -85,23 +86,36 @@
             </div>
           </div>
         </div>
+
+        <div v-show="page === 5">
+          <p>
+            Thanks for submitting that. We'll check it's not spam and then add it to the map.
+          </p>
+        </div>
       </section>
       <footer class="modal-card-foot">
         <div class="field">
           <div class="control">
             <div class="buttons">
               <button
-                v-if="page !== 1"
+                v-if="page !== 1 && page !== this.lastPage"
                 type="button"
                 class="button is-default"
                 @click.prevent="page--"
               >Back</button>
               <button
-                v-if="page === 4"
+                v-if="page === this.submitPage"
                 type="submit"
                 class="button is-success"
-                :disabled="!nextable"
+                :class="{'is-loading': saving}"
+                :disabled="!nextable||saving"
               >{{ nextable ? 'All done!' : 'Fill in details...' }}</button>
+              <button
+                v-else-if="page === this.lastPage"
+                type="button"
+                class="button is-success"
+                @click.prevent="finish"
+              >Done</button>
               <button
                 v-else-if="page !== 1 || this.nextable"
                 type="button"
@@ -132,7 +146,7 @@ export default {
   data() {
     return {
       page: 1,
-      pageCount: 4,
+      pageCount: 5,
       objectUrl: null,
       previewCropped: null,
       title: "",
@@ -141,7 +155,10 @@ export default {
       debouncedUpdatePreview: debounce(this.updatePreview, 257),
       debug: window.debug,
       exifDate: null,
-      photoLatLng: null
+      photoLatLng: null,
+      saving: false,
+      lastPage: 5,
+      submitPage: 4,
     };
   },
   computed: {
@@ -158,7 +175,8 @@ export default {
         "Choose an image",
         "Crop your image",
         "Set photo coordinates",
-        "Add extra details"
+        "Add extra details",
+        'All done',
       ][this.page - 1];
     },
     nextable() {
@@ -174,6 +192,8 @@ export default {
           );
         case 4:
           return this.title && this.artist;
+        case 5:
+          return true;
         default:
           console.error("Invalid page.");
           return false;
@@ -228,19 +248,40 @@ export default {
       this.previewCropped = canvas.toDataURL("image/jpeg");
     },
     onSubmit() {
-      console.log("save");
+      this.saving = true;
 
       const canvas = this.cropper.getCroppedCanvas();
 
       canvas.toBlob(blob => {
         const formData = new FormData();
 
-        formData.append("my-avatar-file", blob, "avatar.png");
+        formData.append("photo", blob, "photo.jpg");
+        formData.append('title', this.title);
+        formData.append('artist', this.artist);
+        formData.append('lat', this.photoLatLng.lat);
+        formData.append('lng', this.photoLatLng.lng);
 
-        axios.post("/api/files", formData, {
+        fetch("/photos", {
+          body: formData,
+          credentials: 'same-origin',
+          method: 'post',
           headers: {
-            "Content-Type": "multipart/form-data"
+            "X-CSRF-Token": document.head.querySelector("[name~=csrf-token][content]").content
           }
+        })
+        .then(response=> {
+          if (response.status !== 201) {
+            throw 'Bad response status.';
+          }
+
+          this.page++;
+        })
+        .catch(error => {
+          console.error(error);
+          alert('There was a problem');
+        })
+        .then(() => {
+          this.saving = false;
         });
       });
     },
@@ -271,7 +312,18 @@ export default {
     },
     updateLatLng(latLng) {
       this.photoLatLng = latLng;
-    }
+    },
+    finish() {
+      this.page = 1;
+      this.objectUrl = null;
+      this.previewCropped = null;
+      this.title = '';
+      this.artist = '';
+      this.selectedFile = null;
+      this.exifDate = null;
+      this.photoLatLng = null;
+      this.$emit('close');
+    },
   }
 };
 </script>
