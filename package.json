@@ -17,12 +17,18 @@
         "resolve-url-loader": "^3.1.0",
         "sass": "^1.15.2",
         "sass-loader": "^8.0.0",
-        "vue-template-compiler": "^2.6.11"
+        "vue-template-compiler": "^2.6.11",
+        "eslint": "^6.8.0",
+        "eslint-config-airbnb": "^18.1.0",
+        "eslint-config-prettier": "^6.10.1",
+        "eslint-plugin-prettier": "^3.1.2",
+        "prettier": "^2.0.2",
+        "stylelint-config-airbnb": "0.0.0"
     },
     "dependencies": {
         "bulma": "^0.8.1",
         "cropperjs": "^1.5.6",
-        "exifreader": "^3.3.0",
+        "exifreader": "^3.5.0",
         "leaflet": "^1.6.0",
         "minireset.css": "0.0.6",
         "vue": "^2.6.11",
