@@ -15,20 +15,16 @@ class PhotoController extends Controller
     public function index(Request $request)
     {
         $this->validate($request, [
-            'north' => 'required|numeric|min:-90|max:90',
-            'south' => 'required|numeric|min:-90|max:90',
-            'east' => 'required|numeric|min:-180|max:180',
-            'west' => 'required|numeric|min:-180|max:180',
+            'lat' => 'required|numeric|min:-90|max:90',
+            'lng' => 'required|numeric|min:-180|max:180',
         ]);
 
         return response()->json([
             'photos' => Photo::query()
-                ->inRect(
-                    $request->input('north'),
-                    $request->input('east'),
-                    $request->input('south'),
-                    $request->input('west')
-                )
+                ->equals('coords', new Point(
+                    $request->input('lat'),
+                    $request->input('lng')
+                ))
                 ->available()
                 ->get(),
         ]);
@@ -47,7 +43,7 @@ class PhotoController extends Controller
         $filename = uniqid(Str::slug($request->input('title')));
 
         Image::make($request->file('photo'))
-            ->save(storage_path('app/photos/' . $filename . '.jpg'), 80, 'jpg');
+            ->save(storage_path('app/public/photos/' . $filename . '.jpg'), 80, 'jpg');
 
         $photo = Photo::create([
             'title' => $request->input('title'),

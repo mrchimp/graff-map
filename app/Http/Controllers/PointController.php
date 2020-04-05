@@ -26,7 +26,13 @@ class PointController extends Controller
             ->available()
             ->get()
             ->pluck('coords')
-            ->unique();
+            ->unique()
+            ->map(function ($item) {
+                return [
+                    'lat' => $item->getLat(),
+                    'lng' => $item->getLng(),
+                ];
+            });
 
         return response()->json([
             'points' => $points,

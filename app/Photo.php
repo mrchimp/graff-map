@@ -24,6 +24,12 @@ class Photo extends Model
         'coords',
     ];
 
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'date',
+    ];
+
     /**
      * Find Photos which have been approved
      *

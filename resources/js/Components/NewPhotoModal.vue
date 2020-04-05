@@ -1,141 +1,144 @@
 <template>
-  <div class="modal-card">
-    <form @submit.prevent="onSubmit">
-      <header class="modal-card-head">
-        <p class="modal-card-title">{{ pageTitle }} ({{ page }} / {{ pageCount }})</p>
-        <button class="delete" aria-label="close" @click.prevent="close"></button>
-      </header>
-      <section class="modal-card-body">
-        <div v-show="page === 1">
-          <div class="file">
-            <label class="file-label">
-              <input
-                class="file-input"
-                type="file"
-                name="resume"
-                accept="image/png, image/jpeg"
-                placeholder="Select an image"
-                @input="pickFile"
-              />
+  <div class="modal is-active">
+    <div class="modal-backgroundd"></div>
+    <div class="modal-card">
+      <form @submit.prevent="onSubmit">
+        <header class="modal-card-head">
+          <p class="modal-card-title">{{ pageTitle }} ({{ page }} / {{ pageCount }})</p>
+          <button class="delete" aria-label="close" @click.prevent="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <div v-show="page === 1">
+            <div class="file">
+              <label class="file-label">
+                <input
+                  class="file-input"
+                  type="file"
+                  name="resume"
+                  accept="image/png, image/jpeg"
+                  placeholder="Select an image"
+                  @input="pickFile"
+                />
 
-              <span class="file-cta">
-                <span class="file-icon">
-                  <i class="fas fa-upload"></i>
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">Choose a file…</span>
                 </span>
-                <span class="file-label">Choose a file…</span>
-              </span>
-            </label>
-          </div>
-        </div>
-        <div v-show="page === 2">
-          <div class="image-preview-wrapper">
-            <img
-              class="image-preview"
-              ref="source"
-              :src="objectUrl"
-              alt="Image preview"
-              v-if="objectUrl"
-            />
-          </div>
-          <div class="image-preview-wrapper" v-if="objectUrl && debug">
-            <img class="image-preview" :src="previewCropped" alt="Cropped image preview" />
-          </div>
-        </div>
-        <div v-if="page === 3">
-          <div class="field" v-if="debug">
-            <label class="label">Coordinates</label>
-            <div class="control">
-              <input class="input" type="text" disabled v-model="photoLatLng" />
+              </label>
             </div>
           </div>
-
-          <div class="field">
-            <coord-selector
-              v-if="photoLatLng !== null"
-              :coords="photoLatLng"
-              @input="updateLatLng"
-            />
+          <div v-show="page === 2">
+            <div class="image-preview-wrapper">
+              <img
+                class="image-preview"
+                ref="source"
+                :src="objectUrl"
+                alt="Image preview"
+                v-if="objectUrl"
+              />
+            </div>
+            <div class="image-preview-wrapper" v-if="objectUrl && debug">
+              <img class="image-preview" :src="previewCropped" alt="Cropped image preview" />
+            </div>
           </div>
-        </div>
+          <div v-if="page === 3">
+            <div class="field" v-if="debug">
+              <label class="label">Coordinates</label>
+              <div class="control">
+                <input class="input" type="text" disabled v-model="photoLatLng" />
+              </div>
+            </div>
 
-        <div v-show="page === 4">
-          <div class="field">
-            <label for="photoTitle" class="label">Title</label>
-            <div class="control">
-              <input
-                type="text"
-                class="input"
-                id="photoTitle"
-                v-model="title"
-                placeholder="What's this piece called?"
-                ref="title"
+            <div class="field">
+              <coord-selector
+                v-if="photoLatLng !== null"
+                :coords="photoLatLng"
+                @input="updateLatLng"
               />
             </div>
           </div>
 
-          <div class="field">
-            <label for="photoArtist" class="label">Artist</label>
-            <div class="control">
-              <input
-                type="text"
-                class="input"
-                id="photoArtist"
-                v-model="artist"
-                placeholder="Who made this piece?"
-              />
+          <div v-show="page === 4">
+            <div class="field">
+              <label for="photoTitle" class="label">Title</label>
+              <div class="control">
+                <input
+                  type="text"
+                  class="input"
+                  id="photoTitle"
+                  v-model="title"
+                  placeholder="What's this piece called?"
+                  ref="title"
+                />
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div v-show="page === 5">
-          <p>
-            Thanks for submitting that. We'll check it's not spam and then add it to the map.
-          </p>
-        </div>
-      </section>
-      <footer class="modal-card-foot">
-        <div class="field">
-          <div class="control">
-            <div class="buttons">
-              <button
-                v-if="page !== 1 && page !== this.lastPage"
-                type="button"
-                class="button is-default"
-                @click.prevent="page--"
-              >
-                Back
-              </button>
-              <button
-                v-if="page === this.submitPage"
-                type="submit"
-                class="button is-success"
-                :class="{ 'is-loading': saving }"
-                :disabled="!nextable || saving"
-              >
-                {{ nextable ? 'All done!' : 'Fill in details...' }}
-              </button>
-              <button
-                v-else-if="page === this.lastPage"
-                type="button"
-                class="button is-success"
-                @click.prevent="finish"
-              >
-                Done
-              </button>
-              <button
-                v-else-if="page !== 1 || this.nextable"
-                type="button"
-                class="button is-success"
-                @click.prevent="page++"
-                :disabled="!nextable"
-              >
-                Next
-              </button>
+            <div class="field">
+              <label for="photoArtist" class="label">Artist</label>
+              <div class="control">
+                <input
+                  type="text"
+                  class="input"
+                  id="photoArtist"
+                  v-model="artist"
+                  placeholder="Who made this piece?"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
-    </form>
+
+          <div v-show="page === 5">
+            <p>
+              Thanks for submitting that. We'll check it's not spam and then add it to the map.
+            </p>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <div class="field">
+            <div class="control">
+              <div class="buttons">
+                <button
+                  v-if="page !== 1 && page !== this.lastPage"
+                  type="button"
+                  class="button is-default"
+                  @click.prevent="page--"
+                >
+                  Back
+                </button>
+                <button
+                  v-if="page === this.submitPage"
+                  type="submit"
+                  class="button is-success"
+                  :class="{ 'is-loading': saving }"
+                  :disabled="!nextable || saving"
+                >
+                  {{ nextable ? 'All done!' : 'Fill in details...' }}
+                </button>
+                <button
+                  v-else-if="page === this.lastPage"
+                  type="button"
+                  class="button is-success"
+                  @click.prevent="finish"
+                >
+                  Done
+                </button>
+                <button
+                  v-else-if="page !== 1 || this.nextable"
+                  type="button"
+                  class="button is-success"
+                  @click.prevent="page++"
+                  :disabled="!nextable"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </form>
+    </div>
   </div>
 </template>
 
