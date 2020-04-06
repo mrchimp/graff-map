@@ -1,7 +1,8 @@
 <template>
   <div class="modal is-active">
     <div class="modal-background"></div>
-    <div class="modal-content">
+    <div v-if="isLoading" class="modal-content is-loading">Loading photos...</div>
+    <div v-else class="modal-content">
       <img
         v-if="currentPhoto"
         :src="'/storage/photos/' + currentPhoto.photo"
@@ -50,6 +51,8 @@ export default {
   },
   data() {
     return {
+      isLoading: true,
+      isLoading: true,
       photos: [],
       currentPhoto: null,
     };
@@ -117,6 +120,8 @@ export default {
 
       Object.keys(params).forEach((key) => url.searchParams.append(key, params[key]));
 
+      this.isLoading = true;
+
       fetch(url, {
         credentials: 'same-origin',
         method: 'get',
@@ -129,13 +134,16 @@ export default {
             this.photos = json.photos;
 
             if (this.photos.length > 0) {
-              this.currentPhoto = this.photos[0];
+              this.currentPhoto = this.photos[this.photos.length - 1];
             }
           });
         })
         .catch((error) => {
           console.error(error);
           alert("Oh no. Something's broken");
+        })
+        .then(() => {
+          this.isLoading = false;
         });
     },
   },
